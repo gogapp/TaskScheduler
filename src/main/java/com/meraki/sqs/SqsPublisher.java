@@ -6,12 +6,14 @@ import com.meraki.utils.JsonUtils;
 import com.meraki.workerNode.dto.TaskHttpRequest;
 import com.meraki.workerNode.dto.TaskMessage;
 import com.meraki.workerNode.dto.UserQuota;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
+@Slf4j
 @Component
 public class SqsPublisher {
 
@@ -29,5 +31,6 @@ public class SqsPublisher {
                 .messageBody(JsonUtils.getJsonString(taskMessage))
                 .build());
 
+        log.info("Published taskMessage - {}", taskMessage);
     }
 }

@@ -39,10 +39,12 @@ public class JobScheduler {
     public void scheduleJobs() {
 
         long startTime = Instant.MIN.getEpochSecond();
-        long now = Instant.now().getEpochSecond();
-        long fiveMinutesLater = now + 300;
+        long now = Instant.now().getEpochSecond() * 1000;
+        long fiveMinutesLater = now + 300 * 1000;
+        log.info("Started processing job scheduler at - {}", now);
 
         List<Jobs> jobs = jobRepository.findJobsStartingBetween(startTime, fiveMinutesLater);
+        log.info("Jobs for scheduling - {}", jobs);
 
         for (Jobs job : jobs) {
             try {
@@ -51,6 +53,8 @@ public class JobScheduler {
                 log.error("Failed to schedule job {}", job.getJobId(), e);
             }
         }
+
+        log.info("Completed processing job scheduler at - {}", now);
     }
 
     @Transactional
@@ -66,15 +70,16 @@ public class JobScheduler {
                 .userId(job.getUserId())
                 .httpRequest(HttpUtils.parse(job.getCurl()))
                 .userQuota(new UserQuota())
-                .startTime(new Timestamp(startTime.getEpochSecond()))
-                .createdAt(new Timestamp(now.getEpochSecond())).build();
+                .startTime(new Timestamp(startTime.getEpochSecond() * 1000))
+                .createdAt(new Timestamp(now.getEpochSecond() * 1000)).build();
 
         taskEventSourcingRepository.updateStatus(taskMessage, Enums.TaskStatus.SCHEDULED);
 
         Duration delaySeconds = Duration.between(now, startTime);
         sqsPublisher.publish(taskMessage, delaySeconds.getSeconds());
 
-        Instant next = DateTimeUtils.getNextStartTime(startTime, job.getCron());
+        Instant jobLastExecutionTime = (now.isBefore(startTime)) ? startTime: now;
+        Instant next = DateTimeUtils.getNextStartTime(jobLastExecutionTime, job.getCron());
         jobRepository.updateNextStartTime(job.getUserId(), job.getCreatedAt(), next);
 
     }

@@ -31,12 +31,12 @@ public class JobRepository {
                 .tableName(jobTable)
                 .item(Map.of(
                         "status", AttributeValue.fromS(job.getStatus()),
-                        "nextStartTime", AttributeValue.fromN(String.valueOf(job.getNextStartTime().getEpochSecond())),
+                        "nextStartTime", AttributeValue.fromN(String.valueOf(job.getNextStartTime().getEpochSecond() * 1000)),
                         "jobId", AttributeValue.fromS(job.getJobId()),
                         "userId", AttributeValue.fromS(job.getUserId()),
                         "curl", AttributeValue.fromS(job.getCurl()),
                         "cron", AttributeValue.fromS(job.getCron()),
-                        "createdAt", AttributeValue.fromS(String.valueOf(job.getCreatedAt().getEpochSecond()))
+                        "createdAt", AttributeValue.fromS(String.valueOf(job.getCreatedAt().getEpochSecond() * 1000))
                 ))
                 .build());
     }
@@ -46,9 +46,8 @@ public class JobRepository {
         QueryRequest request = QueryRequest.builder()
                 .tableName(jobTable)
                 .indexName(jobStartTimeIndex)
-                .keyConditionExpression(
-                        "#st = :sb AND nextStartTime BETWEEN :from AND :to"
-                )
+                .keyConditionExpression("#st = :sb")
+                .filterExpression("nextStartTime BETWEEN :from AND :to")
                 .expressionAttributeNames(Map.of(
                         "#st", "status"
                 ))
@@ -133,12 +132,12 @@ public class JobRepository {
                 .tableName(jobTable)
                 .key(Map.of(
                         "userId", AttributeValue.fromS(userId),
-                        "createdAt", AttributeValue.fromS(String.valueOf(createdAt.toEpochMilli()))
+                        "createdAt", AttributeValue.fromS(String.valueOf(createdAt.getEpochSecond() * 1000))
                 ))
                 .updateExpression("SET nextStartTime = :next, updatedAt = :now")
                 .expressionAttributeValues(Map.of(
-                        ":next", AttributeValue.fromN(String.valueOf(next.toEpochMilli())),
-                        ":now", AttributeValue.fromS(String.valueOf(Instant.now().toEpochMilli()))
+                        ":next", AttributeValue.fromN(String.valueOf(next.getEpochSecond() * 1000)),
+                        ":now", AttributeValue.fromS(String.valueOf(Instant.now().getEpochSecond() * 1000))
                 ))
                 .build();
 
@@ -151,8 +150,8 @@ public class JobRepository {
                 .userId(item.get("userId").s())
                 .curl(item.get("curl").s())
                 .cron(item.get("cron").s())
-                .nextStartTime(Instant.ofEpochSecond(Long.parseLong(item.get("nextStartTime").n())))
-                .createdAt(Instant.ofEpochSecond(Long.parseLong(item.get("createdAt").s())))
+                .nextStartTime(Instant.ofEpochMilli(Long.parseLong(item.get("nextStartTime").n())))
+                .createdAt(Instant.ofEpochMilli(Long.parseLong(item.get("createdAt").s())))
                 .status(item.get("status").s())
                 .build();
     }

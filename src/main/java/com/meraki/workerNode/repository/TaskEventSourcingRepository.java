@@ -1,5 +1,6 @@
 package com.meraki.workerNode.repository;
 
+import com.meraki.idgen.IdGenService;
 import com.meraki.scheduler.dto.Jobs;
 import com.meraki.workerNode.dto.Task;
 import com.meraki.workerNode.dto.TaskMessage;
@@ -32,6 +33,9 @@ public class TaskEventSourcingRepository {
     @Value("${dynamo.task.entry.index}")
     String taskEntryIndex;
 
+    @Autowired
+    IdGenService idGenService;
+
     public Optional<Map<String, AttributeValue>> fetchLatestTaskEntry(String taskId) {
 
         QueryRequest queryRequest = QueryRequest.builder()
@@ -55,17 +59,19 @@ public class TaskEventSourcingRepository {
     }
 
     public void updateStatus(TaskMessage taskMessage, Enums.TaskStatus taskStatus) {
+        long id = idGenService.getNextId();
         dynamoDb.putItem(
                 PutItemRequest.builder()
                         .tableName(tableName)
                         .item(Map.of(
+                                "id", AttributeValue.fromN(String.valueOf(id)),
                                 "taskId", AttributeValue.fromS(taskMessage.getTaskId()),
                                 "jobId", AttributeValue.fromS(taskMessage.getJobId()),
                                 "userId", AttributeValue.fromS(taskMessage.getUserId()),
                                 "httpRequest", AttributeValue.fromS(String.valueOf(taskMessage.getHttpRequest())),
                                 "status", AttributeValue.fromS(taskStatus.name()),
                                 "startTime", AttributeValue.fromS(String.valueOf(taskMessage.getStartTime().getTime())),
-                                "createdAt", AttributeValue.fromS(String.valueOf(DateTimeUtils.currentTimestamp().getEpochSecond()))
+                                "createdAt", AttributeValue.fromS(String.valueOf(DateTimeUtils.currentTimestamp().getEpochSecond() * 1000))
                         ))
                         .build()
         );
