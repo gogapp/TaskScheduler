@@ -39,9 +39,11 @@ public class TaskExecutionService {
             sqsVisibilityExtender.startLease(taskProcessingQueueUrl, taskMessage.getReceiptHandle(),
                     30, 30);
 
+            log.info("Started processing taskMessage - {}", taskMessage);
             taskEventSourcingRepository.updateStatus(taskMessage, Enums.TaskStatus.PROCESSING);
             httpTaskExecutor.execute(taskMessage.getHttpRequest());
             taskEventSourcingRepository.updateStatus(taskMessage, Enums.TaskStatus.COMPLETED);
+            log.info("Completed processing taskMessage - {}", taskMessage);
 
         } catch (Exception e) {
             log.error("Failed to execute taskMessage - {}", taskMessage, e);

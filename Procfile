@@ -1,1 +1,1 @@
-web: java -Xms512m -Xmx1024m -javaagent:newrelic.jar -jar workerNode-0.0.1-SNAPSHOT.jar
+web: java -Xms256m -Xmx512m -javaagent:newrelic.jar -jar workerNode-0.0.1-SNAPSHOT.jar

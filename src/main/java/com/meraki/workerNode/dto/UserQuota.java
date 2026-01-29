@@ -16,7 +16,7 @@ public class UserQuota {
     private int timeOut;
 
     public UserQuota() {
-        this.rateLimit = 10;
+        this.rateLimit = 5;
         this.windowSeconds = 300;
         this.concurrencyLimit = 2;
         this.timeOut = 600;

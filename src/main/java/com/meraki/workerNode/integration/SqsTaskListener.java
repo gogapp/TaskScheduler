@@ -37,6 +37,7 @@ public class SqsTaskListener {
 
         TaskMessage message = new ObjectMapper().readValue(payload, TaskMessage.class);
         message.setReceiptHandle(receiptHandle);
+        log.info("Received taskMessage - {}", message);
 
         try {
 
@@ -49,6 +50,7 @@ public class SqsTaskListener {
             }
 
             // TODO: Cleanup on process crash
+            log.info("Completed processing task message - {}", message);
 
         } catch (Exception e) {
             if(e instanceof ConcurrencyQuotaExceededException) {

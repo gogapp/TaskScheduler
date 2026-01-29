@@ -51,6 +51,13 @@ public class ConcurrencyQuotaService {
         }
     }
 
+    public long getNumConcurrentTasksPerUser(String userId) {
+
+        RAtomicLong counter = redissonClient.getAtomicLong(key(userId));
+        return counter.get();
+
+    }
+
     private String key(String userId) {
         return "concurrency:" + userId;
     }
